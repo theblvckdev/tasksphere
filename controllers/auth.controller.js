@@ -1,6 +1,25 @@
 const db = require("../config/database");
 const bcrypt = require("bcryptjs");
 
+// get all users controllers
+const getAllUsers = (req, res) => {
+  const query =
+    "SELECT user_id, full_name, email, created_at, updated_at FROM users";
+  db.query(query, [], (err, data) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        err,
+      });
+    }
+
+    return res.status(200).json({
+      message: "Getting all users",
+      data,
+    });
+  });
+};
+
 // create user controller
 const createUser = (req, res) => {
   const { full_name, email, password } = req.body;
@@ -92,4 +111,70 @@ const loginUser = (req, res) => {
   });
 };
 
-module.exports = { createUser, loginUser };
+// update user details
+const updateUserDetails = (req, res) => {
+  const id = req.params.id;
+  const { full_name, email } = req.body;
+
+  const query = "SELECT * FROM users WHERE user_id = ?";
+  db.query(query, [id], (err, data) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        err,
+      });
+    }
+
+    // check if user with id exists
+    if (!data.length) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    // update user details in db
+    const updateQuery =
+      "UPDATE users SET full_name = ?, email = ? WHERE user_id = ?";
+    db.query(updateQuery, [full_name, email, id], (err, data) => {
+      if (err) {
+        return res.status(500).json({
+          error: "Internal Server Error",
+          err,
+        });
+      }
+
+      return res.status(200).json({
+        message: "User details updated",
+        data,
+      });
+    });
+  });
+};
+
+// delete users controller
+const deleteUsers = (req, res) => {
+  const id = req.params.id;
+
+  const query = "DELETE FROM users WHERE user_id = ?";
+  db.query(query, [id], (err, data) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        err,
+      });
+    }
+
+    return res.status(200).json({
+      message: `User ${id} has been deleted`,
+      data,
+    });
+  });
+};
+
+module.exports = {
+  getAllUsers,
+  createUser,
+  loginUser,
+  updateUserDetails,
+  deleteUsers,
+};
