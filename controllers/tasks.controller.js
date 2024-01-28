@@ -90,4 +90,41 @@ const updateTask = (req, res) => {
   });
 };
 
-module.exports = { getAllTasks, createTasks, updateTask };
+// delete task controller
+const deleteTask = (req, res) => {
+  const taskId = req.params.id;
+  const { user_id } = req.body;
+
+  const query = "SELECT * FROM tasks WHERE task_id = ?";
+  db.query(query, [taskId], (err, data) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        err,
+      });
+    }
+
+    if (data[0].user_id !== user_id) {
+      return res.status(401).json({
+        error: "You can only delete your tasks",
+      });
+    }
+
+    const query = "DELETE FROM tasks WHERE task_id = ?";
+    db.query(query, [taskId], (err, data) => {
+      if (err) {
+        return res.status(500).json({
+          error: "Internal Server Error",
+          err,
+        });
+      }
+
+      return res.status(200).json({
+        message: "Task has been deleted",
+        data,
+      });
+    });
+  });
+};
+
+module.exports = { getAllTasks, createTasks, updateTask, deleteTask };
