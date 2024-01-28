@@ -42,4 +42,52 @@ const createTasks = (req, res) => {
   );
 };
 
-module.exports = { getAllTasks, createTasks };
+// update task controller
+const updateTask = (req, res) => {
+  const taskId = req.params.id;
+  const { user_id, title, content, priority, category, completed } = req.body;
+
+  const query = "SELECT * FROM tasks WHERE task_id = ?";
+  db.query(query, [taskId], (err, data) => {
+    if (err) {
+      return res.status(500).json({
+        error: "Internal Server Error",
+        err,
+      });
+    }
+
+    if (!data.length) {
+      return res.status(409).json({
+        error: "Task not found",
+      });
+    }
+
+    if (data[0].user_id !== user_id) {
+      return res.status(401).json({
+        error: "You can only update your tasks",
+      });
+    }
+
+    const query =
+      "UPDATE tasks SET title = ?, content = ?, priority = ?, category = ?, completed = ? WHERE task_id = ?";
+    db.query(
+      query,
+      [title, content, priority, category, completed, taskId],
+      (err, data) => {
+        if (err) {
+          return res.status(500).json({
+            error: "Internal Server Error",
+            err,
+          });
+        }
+
+        return res.status(200).json({
+          error: "Your task hase been updated",
+          data,
+        });
+      }
+    );
+  });
+};
+
+module.exports = { getAllTasks, createTasks, updateTask };
